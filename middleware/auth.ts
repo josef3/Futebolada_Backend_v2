@@ -11,12 +11,10 @@ export function authenticateToken(req: IRequest, res: IResponse, next: INext) {
 
         if (user) {
             if (user.id_admin > 0) {
-                req.isAdmin = true;
                 req.id_admin = user.id_admin;
                 req.admin_role = user.role;
             }
             else {
-                req.isAdmin = false;
                 req.id_player = user.id_player;
             }
         }

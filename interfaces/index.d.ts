@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
 export interface IRequest extends Request {
-    isAdmin?: boolean;
     admin_role?: 'admin' | 'read-only';
     id_admin?: number;
     id_player?: number;
