@@ -1,8 +1,11 @@
 import express from 'express';
-import { getPlayers } from '../controllers/player';
+
+import {
+    login,
+} from '../controllers/player';
 
 const router = express.Router();
 
-router.get('/', getPlayers);
+router.post('/login', login);
 
 export default router;
