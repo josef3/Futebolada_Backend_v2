@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 
-// ROUTES
+import errorMiddleware from './middleware/error.middleware';
+
 import adminRoute from './routes/admin';
 
 const app = express();
@@ -14,5 +15,7 @@ app.disable('x-powered-by');
 app.get('/', (req, res) => res.send("Welcome to Futebolada Backend!"));
 
 app.use('/api/v2/admin', adminRoute);
+
+app.use(errorMiddleware);
 
 export default app;
