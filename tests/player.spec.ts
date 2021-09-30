@@ -1,6 +1,7 @@
-import { pool } from '../db_connection';
 import request from 'supertest';
 import app from '../app';
+import { pool } from '../db_connection';
+
 import InvalidAuthTokenException from '../exceptions/InvalidAuthTokenException';
 
 const API_URL = '/api/v2/player';
@@ -18,9 +19,8 @@ describe('GET /player', () => {
         const res = await request(app).get(`${API_URL}`)
             .set({ Authorization: 'Bearer ' + playerAccessToken });
 
-
         expect(res.status).toBe(200);
-        expect(Object.keys(res.body).length).toBe(4);
+        expect(Object.keys(res.body).length).toBe(5);
         expect(res.body).toHaveProperty('id_player');
         expect(res.body.id_player).toBeGreaterThan(0);
         expect(res.body).toHaveProperty('first_name');
