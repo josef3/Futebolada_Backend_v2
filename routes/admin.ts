@@ -1,9 +1,14 @@
 import express from 'express';
-import { login, register } from '../controllers/admin';
+
+import { isSuperAdmin } from '../middleware/isSuperAdmin.middleware';
+import { authenticateToken } from '../middleware/auth.middleware';
+
+import { deleteAdmin, login, register } from '../controllers/admin';
 
 const router = express.Router();
 
 router.post('/login', login);
-// router.post('/register', register);
+router.post('/register', authenticateToken, isSuperAdmin, register);
+router.delete('/:id', authenticateToken, isSuperAdmin, deleteAdmin);
 
 export default router;
