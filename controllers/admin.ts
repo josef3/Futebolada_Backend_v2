@@ -5,10 +5,10 @@ import { pool } from '../db_connection';
 import { INext, IRequest, IResponse } from '../interfaces';
 
 import WrongCredentialsException from '../exceptions/WrongCredentialsException';
-import HttpException from '../exceptions/HttpException';
 import UsernameInUseException from '../exceptions/UsernameInUseException';
 import EmptyFieldException from '../exceptions/EmptyFieldException';
 import IdNotFoundException from '../exceptions/IdNotFoundException';
+import InvalidValueException from '../exceptions/InvalidValueException';
 
 import { hashPassword } from '../utils';
 
@@ -22,14 +22,14 @@ export async function register(req: IRequest, res: IResponse, next: INext) {
         return next(new EmptyFieldException('password'));
     }
     if (role && (role !== 'admin' && role !== 'read-only')) {
-        return next(new HttpException(400, 'Role do admin inválida'));
+        return next(new InvalidValueException('role'));
     }
     try {
         const hashedPassword = hashPassword(password);
         const { rows } = await createAdmin(username, hashedPassword, role ?? 'read-only');
 
         const accessToken = signAccessToken(rows[0].id_admin, username, role ?? 'read-only');
-        res.status(201).send({ accessToken });
+        res.status(201).send({ accessToken, id: rows[0].id_admin });
     }
     catch (error) {
         next(error);
@@ -50,10 +50,10 @@ export async function login(req: IRequest, res: IResponse, next: INext) {
         FROM admin 
         WHERE username LIKE $1`, [username]);
         if (!rowCount) {
-            return next(new WrongCredentialsException());
+            throw new WrongCredentialsException();
         }
         if (!bcrypt.compareSync(password, rows[0].password)) {
-            return next(new WrongCredentialsException());
+            throw new WrongCredentialsException();
         }
         const accessToken = signAccessToken(rows[0].id_admin, rows[0].username, rows[0].role);
         res.status(200).send({ accessToken, username: rows[0].username });
