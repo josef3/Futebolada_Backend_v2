@@ -1,9 +1,9 @@
 import HttpException from './HttpException';
 
-class NotAuthorizedException extends HttpException {
+class UnauthorizedException extends HttpException {
     constructor() {
         super(403, 'Sem autorização para aceder a este recurso');
     }
 }
 
-export default NotAuthorizedException;
+export default UnauthorizedException;
