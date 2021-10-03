@@ -1,9 +1,9 @@
 import { IRequest, IResponse, INext } from "../interfaces";
-import NotAuthorizedException from '../exceptions/NotAuthorizedException';
+import UnauthorizedException from '../exceptions/UnauthorizedException';
 
 export const isSuperAdmin = (req: IRequest, res: IResponse, next: INext) => {
     if (req.admin_role !== 'admin') {
-        return next(new NotAuthorizedException());
+        return next(new UnauthorizedException());
     }
     next();
 }
