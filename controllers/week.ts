@@ -40,7 +40,7 @@ export async function getWeekById(req: IRequest, res: IResponse, next: INext) {
 }
 
 export async function createWeek(req: IRequest, res: IResponse, next: INext) {
-    const { date, voteFinishDate } = req.params;
+    const { date, voteFinishDate } = req.body;
     if (!date) {
         return next(new EmptyFieldException('data'));
     }
@@ -59,7 +59,7 @@ export async function createWeek(req: IRequest, res: IResponse, next: INext) {
         }
 
         const { rows, rowCount } = await pool.query(`
-        INSERT INTO week(date, vote_finish_date, vote_finished) 
+        INSERT INTO week(date, vote_finish_date) 
         VALUES ($1, $2)
         RETURNING id_week`, [new Date(date), voteFinish]);
         if (!rowCount) {
