@@ -1,7 +1,11 @@
 import request from 'supertest';
 import app from '../app';
 import { pool } from '../db_connection';
+
+import EmptyFieldException from '../exceptions/EmptyFieldException';
 import IdNotFoundException from '../exceptions/IdNotFoundException';
+import InvalidAuthTokenException from '../exceptions/InvalidAuthTokenException';
+import UnauthorizedException from '../exceptions/UnauthorizedException';
 
 const API_URL = '/api/v2/weeks';
 
@@ -58,6 +62,89 @@ describe('GET /weeks/:id', () => {
 
         expect(res.status).toBe(404);
         expect(res.body.message).toBe(new IdNotFoundException('15555', 'semana').message);
+    });
+});
+
+describe('POST /weeks', () => {
+    function addDays(days: number) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + days);
+        return tomorrow;
+    }
+
+    test(`It should return 400 if date was not sent`, async () => {
+        const res = await request(app).post(`${API_URL}`)
+            .set({ Authorization: 'Bearer ' + superAdminToken });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe(new EmptyFieldException('data').message);
+    });
+
+    test(`It should return 400 if date is higher than the time right now`, async () => {
+        const res = await request(app).post(`${API_URL}`)
+            .send({ date: addDays(1) })
+            .set({ Authorization: 'Bearer ' + superAdminToken });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe('A data não pode ser superior à data atual');
+    });
+
+    test(`It should return 400 if voteFinishDate is higher or equal than the date sent`, async () => {
+        const res = await request(app).post(`${API_URL}`)
+            .send({
+                date: new Date(),
+                voteFinishDate: addDays(-1)
+            })
+            .set({ Authorization: 'Bearer ' + superAdminToken });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe('A data de término de votação não pode ser inferior à data do jogo');
+
+        const res2 = await request(app).post(`${API_URL}`)
+            .send({
+                date: new Date(),
+                voteFinishDate: new Date()
+            })
+            .set({ Authorization: 'Bearer ' + superAdminToken });
+
+        expect(res2.status).toBe(400);
+        expect(res2.body.message).toBe('A data de término de votação não pode ser inferior à data do jogo');
+    });
+
+    test(`It should return 400 if already exists a week for the date given`, async () => {
+        const res = await request(app).post(`${API_URL}`)
+            .send({ date: '2021-09-27' })
+            .set({ Authorization: 'Bearer ' + superAdminToken });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe('Já existe uma semana para este dia');
+    });
+
+    test(`It should return 401 if an invalid or no access token is sent`, async () => {
+        const res = await request(app).post(`${API_URL}`);
+
+        expect(res.status).toBe(401);
+        expect(res.body.message).toBe(new InvalidAuthTokenException().message);
+
+        const res2 = await request(app).post(`${API_URL}`)
+            .set({ Authorization: 'Bearer invalid.access.token' });
+
+        expect(res2.status).toBe(401);
+        expect(res2.body.message).toBe(new InvalidAuthTokenException().message);
+    });
+
+    test(`It should return 403 if an ordinary player or an admin with read-only role tries to create a week`, async () => {
+        const res = await request(app).post(`${API_URL}`)
+            .set({ Authorization: 'Bearer ' + playerToken });;
+
+        expect(res.status).toBe(403);
+        expect(res.body.message).toBe(new UnauthorizedException().message);
+
+        const res2 = await request(app).post(`${API_URL}`)
+            .set({ Authorization: 'Bearer ' + readOnlyAdminToken });
+
+        expect(res2.status).toBe(403);
+        expect(res2.body.message).toBe(new UnauthorizedException().message);
     });
 });
 
