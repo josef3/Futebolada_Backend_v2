@@ -48,7 +48,7 @@ export async function login(req: IRequest, res: IResponse, next: INext) {
         const { rows, rowCount } = await pool.query(`
         SELECT id_admin, username, password, role 
         FROM admin 
-        WHERE username LIKE $1`, [username]);
+        WHERE username LIKE $1`, [username.toLowerCase()]);
         if (!rowCount) {
             throw new WrongCredentialsException();
         }
@@ -85,6 +85,7 @@ async function checkUsernameExistence(username: string) {
         SELECT username 
         FROM admin 
         WHERE LOWER(username) LIKE $1`, [username.toLowerCase()]);
+
         return rowCount > 0;
     }
     catch (error) {
@@ -102,7 +103,7 @@ async function createAdmin(username: string, password: string, role: 'admin' | '
         INSERT 
         INTO admin(username, password, role) 
         VALUES ($1, $2, $3) 
-        RETURNING id_admin`, [username, password, role]);
+        RETURNING id_admin`, [username.toLowerCase(), password, role]);
         if (!result.rowCount) {
             throw new Error();
         }
